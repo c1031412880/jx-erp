@@ -1,0 +1,633 @@
+<template>
+  <div class="vehicle-mileage-statistics">
+    <el-card class="box-card left-box" >
+      <div
+        slot="header"
+        class="clearfix show-flex-box-r"
+        style="height: 37px; flex-wrap: nowrap; align-items: center"
+      >
+        <span style="white-space: nowrap">线路选择</span>
+      </div>
+      <div class="show-flex-box-c" :style="`height: ${treeBoxHeight}px`">
+        <line-tree
+          ref="lineTree"
+          :isShowCheckbox="false"
+          :isNodeExpanded="false"
+          :placeholder="'请输入关键词'"
+          @on-check="selectLineInfo"
+        ></line-tree>
+      </div>
+    </el-card>
+    <el-card class="box-card center-box" ref="centerBox">
+      <sub-req ref="head" 
+        @on-ok="onSubmit" 
+        @on-btn-export1="exportFirstFile"
+        @on-btn-export2="exportSecondFile"
+        @on-all-edit="editAll"
+        @on-all-save="saveAll"
+        @on-recalculate="recalculate"
+      ></sub-req>
+      <el-row :gutter="10">
+        <el-col :span="10">
+          <tr-table
+            :indexShow="true"
+            :selectionShow="false"
+            :data="firstData"
+            :isShowSummary="true"
+            :sumColumnIndex="[4,5,6,7,8]"
+            :sumTotal="firstSumTotal"
+            :tableHeaderList="firstCustomSettingList"
+            :isShowBottomOptions="false"
+            :TableHeight="TableHeight"
+            :loading="firstLoading"
+            @on-select-row="selectedRowInfo">
+            <!-- <template slot-scope="scope" slot="operation">
+              <el-button type="text" @click="showDetail(scope.data)">明细</el-button>
+            </template> -->
+          </tr-table>
+          <el-pagination
+            style="margin: 5px 0;display:flex; justify-content: flex-end;"
+            @current-change="firstHandleCurrentChange"
+            @size-change="firstHandleSizeChange"
+            ref="paginationH"
+            :current-page="firstPageInfo.pageIndex"
+            :page-sizes="[10, 20, 30, 40, 50, 100]"
+            :page-size="firstPageInfo.pageSize"
+            layout="total,sizes, prev, pager, next, jumper"
+            :total="firstPageInfo.pageCount">
+          </el-pagination>
+        </el-col>
+
+
+        <el-col :span="14">
+          <tr-table
+            :indexShow="true"
+            :selectionShow="false"
+            :data="secondData"
+            :isShowSummary="true"
+            :sumColumnIndex="[7,8,9,10,11,12,13]"
+            :sumTotal="secondSumTotal"
+            :tableHeaderList="secondCustomSettingList"
+            :isShowBottomOptions="false"
+            :spanMethodType="['column']"
+            :rowspanObj="rowspanObj"
+            :mergekeys="mergekeys"
+            :TableHeight="TableHeight"
+            :backFixedNum="1"
+            :loading="secondLoading">
+            <template slot-scope="scope" slot="DispatchMile">
+              <el-input-number v-model="scope.data.DispatchMile" style="width: 100%" :min="0" :controls="false" v-if="isEditAll || (type == 'edit' && rowIndex == scope.index)"></el-input-number>
+              <span v-else>{{scope.data.DispatchMile}}</span>
+            </template>
+            <template slot-scope="scope" slot="DispatchTotalCostTime">
+              <el-input-number v-model="scope.data.DispatchTotalCostTime" style="width: 100%" :min="0" :controls="false" v-if="isEditAll || (type == 'edit' && rowIndex == scope.index)"></el-input-number>
+              <span v-else>{{scope.data.DispatchTotalCostTime}}</span>
+            </template>
+            <template slot-scope="scope" slot="AdditionMile">
+              <el-input-number v-model="scope.data.AdditionMile" style="width: 100%" :min="0" :controls="false" v-if="isEditAll || (type == 'edit' && rowIndex == scope.index)"></el-input-number>
+              <span v-else>{{scope.data.AdditionMile}}</span>
+            </template>
+            <template slot-scope="scope" slot="AdditionTime">
+              <el-input-number v-model="scope.data.AdditionTime" style="width: 100%" :min="0" :controls="false" v-if="isEditAll || (type == 'edit' && rowIndex == scope.index)"></el-input-number>
+              <span v-else>{{scope.data.AdditionTime}}</span>
+            </template>
+            <template slot-scope="scope" slot="operation">
+              <el-button type="text" style="color:#67c23a;padding:0" v-if="isEditAll || (type == 'edit' && rowIndex == scope.index)" @click="save(scope.data)">保存</el-button>
+              <el-button style="padding:0" type="text" v-else @click="edit(scope.index)">编辑</el-button>
+            </template>
+          </tr-table>
+
+          <el-pagination
+            style="margin: 5px 0;display:flex; justify-content: flex-end;"
+            @current-change="secondHandleCurrentChange"
+            @size-change="secondHandleSizeChange"
+            ref="paginationH"
+            :current-page="secondPageInfo.pageIndex"
+            :page-sizes="[10, 20, 30, 40, 50, 100]"
+            :page-size="secondPageInfo.pageSize"
+            layout="total,sizes, prev, pager, next, jumper"
+            :total="secondPageInfo.pageCount">
+          </el-pagination>
+        </el-col>
+      </el-row>
+    </el-card>
+
+    <detail-dialog 
+      ref="detailDialog"
+      :dialogBool.sync="detailDialogVisible"
+    ></detail-dialog>
+
+    <count-dialog
+      ref="countDialog"
+      :dialogBool.sync="countDialogVisible"
+      @on-load="loadData"
+    ></count-dialog>
+  </div>
+</template>
+
+<script type="text/ecmascript-6">
+import subReq from "./component/sub-req";
+import lineTree from "@/components/base/formModel/tree/line-tree";
+import detailDialog from './component/detail-dialog'
+import countDialog from './component/count-dialog'
+
+export default {
+  name: "vehicle-mileage-statistics",
+  components: {
+    subReq,
+    detailDialog,
+    countDialog,
+    lineTree
+  },
+  mounted() {
+    this.$nextTick(() => {
+      this.setHead();
+    });
+  },
+  data() {
+    return {
+      firstPageInfo: {
+        pageIndex: 1,
+        pageSize: 20,
+        pageCount: 0,
+      },
+      firstData: [],
+      firstForm: {},
+      firstLoading: false,
+      TableHeight: 500,
+      treeBoxHeight: 500,
+      firstCustomSettingList: [
+        {
+          id: 1,
+          label: "线路",
+          prop: "LineName",
+          width: "70",
+          align: "center",
+          signIndex: 0,
+        },
+        {
+          id: 2,
+          label: "自编号",
+          prop: "VehicleCode",
+          width: "70",
+          align: "center",
+          signIndex: 1,
+        },
+        {
+          id: 3,
+          label: "车牌号",
+          prop: "VehicleGrantCode",
+          width: "90",
+          align: "center",
+          signIndex: 2,
+        },
+        {
+          id: 4,
+          label: "总趟数",
+          prop: "Count",
+          width: "70",
+          align: "center",
+          signIndex: 3,
+        },
+        {
+          id: 5,
+          label: "理论里程",
+          prop: "DispatchMile",
+          width: "120",
+          align: "center",
+          signIndex: 4,
+        },
+        {
+          id: 6,
+          label: "额外里程",
+          prop: "AdditionMile",
+          width: "100",
+          align: "center",
+          signIndex: 5,
+        },
+        {
+          id: 7,
+          label: "总里程",
+          prop: "TotalMile",
+          width: "120",
+          align: "center",
+          signIndex: 6,
+        },
+        {
+          id: 8,
+          label: "总用时",
+          prop: "TotalCostTime",
+          width: "80",
+          align: "center",
+          signIndex: 7,
+        },
+      ],
+      firstSumTotal: {
+        4: '',
+        5: '',
+        6: '',
+        7: '',
+        8: '',
+      },
+      detailDialogVisible: false,
+      countDialogVisible: false,
+
+      secondPageInfo: {
+        pageIndex: 1,
+        pageSize: 50,
+        pageCount: 0,
+      },
+      secondLoading:false,
+      secondData: [],
+      secondForm: {
+        VehicleGrantCode: '',
+        start_time: '',
+        end_time: '',
+      },
+      secondCustomSettingList: [
+        {
+          id: 1,
+          label: "日期",
+          prop: "Date",
+          width: "100",
+          align: "center",
+          signIndex: 0,
+        },
+        {
+          id: 2,
+          label: "线路",
+          prop: "LineName",
+          width: "80",
+          align: "center",
+          signIndex: 1,
+        },
+        {
+          id: 3,
+          label: "车牌号",
+          prop: "VehicleGrantCode",
+          width: "120",
+          align: "center",
+          signIndex: 2,
+        },
+        {
+          id: 4,
+          label: "自编号",
+          prop: "VehicleCode",
+          width: "80",
+          align: "center",
+          signIndex: 3,
+        },
+        {
+          id: 5,
+          label: "车牌号",
+          prop: "VehicleGrantCode",
+          width: "100",
+          align: "center",
+          signIndex: 4,
+        },
+        {
+          id: 6,
+          label: "驾驶员",
+          prop: "DriverName",
+          width: "80",
+          align: "center",
+          signIndex: 5,
+        },
+        {
+          id: 7,
+          label: "趟次",
+          prop: "Count",
+          width: "80",
+          align: "center",
+          signIndex: 6,
+        },
+        {
+          id: 8,
+          label: "理论里程",
+          prop: "DispatchMile",
+          width: "120",
+          align: "center",
+          signIndex: 7,
+        },
+        {
+          id: 9,
+          label: "理论用时",
+          prop: "DispatchTotalCostTime",
+          width: "100",
+          align: "center",
+          signIndex: 8,
+        },
+        {
+          id: 10,
+          label: "额外里程",
+          prop: "AdditionMile",
+          width: "100",
+          align: "center",
+          signIndex: 9,
+        },
+        {
+          id: 11,
+          label: "额外用时",
+          prop: "AdditionTime",
+          width: "100",
+          align: "center",
+          signIndex: 10,
+        },
+        {
+          id: 12,
+          label: "总里程",
+          prop: "TotalMile",
+          width: "120",
+          align: "center",
+          signIndex: 11,
+        },
+        {
+          id:13,
+          label: "总用时",
+          prop: "TotalCostTime",
+          width: "80",
+          align: "center",
+          signIndex: 12,
+        },
+        {
+          id:14,
+          label: "操作",
+          prop: "operation",
+          width: "80",
+          align: "center",
+          signIndex: 13,
+        },
+      ],
+      secondSumTotal: {
+        7: '',
+        8: '',
+        9: '',
+        10: '',
+        11: '',
+        12: '',
+        13: '',
+      },
+      // 要纵向合并的单元格的key数组
+      mergekeys: ['Date','VehicleCode','VehicleGrantCode','SumMile'],
+      rowspanObj:{},
+
+      rowIndex: null,
+      type: 'detail',
+      isEditAll: false
+    }
+  },
+  methods: {
+    // 线路树点击
+    selectLineInfo(lineInfo) {
+      if (lineInfo[0].type == 1) {
+        this.firstForm.dept_id = lineInfo[0].i_id
+        this.firstForm.line_id = ''
+        // 最上层 主集团
+        if (lineInfo[0].parent_id == 0) {
+          this.firstForm.dept_id = 0
+        }
+      } else if (lineInfo[0].type == 2) {
+        this.firstForm.dept_id = ''
+        this.firstForm.line_id = lineInfo[0].i_id
+      }
+      this.loadData()
+    },
+    // 行点击
+    selectedRowInfo(row) {
+      this.secondForm.VehicleGrantCode = row.VehicleGrantCode
+      this.secondForm.start_time = this.firstForm.start_time
+      this.secondForm.end_time = this.firstForm.end_time
+      this.secondForm.line_id = this.firstForm.line_id
+      this.secondForm.dept_id = this.firstForm.dept_id
+      this.secondPageInfo.pageIndex = 1
+      this.secondLoadData()
+    },
+    recalculate() {
+      this.$refs.countDialog.setData(this.firstForm)
+      this.$nextTick(() => {
+        this.countDialogVisible = true
+      })
+    },
+    // showDetail(row){
+    //   this.detailDialogVisible = true
+    //   let info = {
+    //     VehicleGrantCode: row.VehicleGrantCode,
+    //     // id: row.VehicleID,
+    //     start_time: this.form.start_time,
+    //     end_time: this.form.end_time,
+    //   }
+    //   this.$refs.detailDialog.setData(info)
+    // },
+    onSubmit(form) {
+      this.firstForm = form
+      this.firstPageInfo.pageIndex = 1
+      this.loadData()
+    },
+    // 获取数据
+    loadData() {
+      this.firstLoading = true
+      let params = Object.assign({}, this.firstForm);
+      params.page_index = this.firstPageInfo.pageIndex
+      params.page_size = this.firstPageInfo.pageSize
+      this.$client.MileSummayVehicleOilRecordSummary(params).then(res => {
+        this.firstLoading = false
+        if (res.head.result == "200") {
+            this.firstData = res.context.list
+            this.firstPageInfo.pageCount = res.context.total
+            this.firstSumTotal = {
+              4: res.context.summary['Count'],
+              5: res.context.summary['DispatchMile'],
+              6: res.context.summary['AdditionMile'],
+              7: res.context.summary['TotalMile'],
+              8: res.context.summary['TotalCostTime'],
+            }
+
+            // 清空明细数据
+            this.secondData = []
+            this.secondPageInfo = {
+              pageIndex: 1,
+              pageSize: 50,
+              pageCount: 0,
+            }
+          } else {
+            this.$message({
+              showClose: true,
+              message: res.head.describle,
+              type: "error",
+            });
+          }
+      })
+    },
+    // 导出Excel
+    exportFirstFile() {
+      let params = Object.assign({}, this.firstForm);
+      this.$client.MileExportVehicleOilRecordSummary(params).then(res => {
+        if (res.head.result == "200") {
+          window.location.href = res.context;
+          this.$message({ type: "success", message: "导出成功" });
+        } else {
+          this.$message({ type: "error", message: "导出失败" });
+        }
+      });
+    },
+    // 导出Excel
+    exportSecondFile() {
+      let params = Object.assign({}, this.secondForm);
+      this.$client.MileDetailExportVehicleOilRecordSummary(params).then(res => {
+        if (res.head.result == "200") {
+          window.location.href = res.context;
+          this.$message({ type: "success", message: "导出成功" });
+        } else {
+          this.$message({ type: "error", message: "导出失败" });
+        }
+      });
+    },
+    // 分页切换事件
+    firstHandleCurrentChange(val) {
+      this.firstPageInfo.pageIndex = val
+      this.loadData()
+    },
+    // 切换每页条数
+    firstHandleSizeChange(val) {
+      this.firstPageInfo.pageSize = val
+      this.firstPageInfo.pageIndex = 1
+      this.firstPageInfo.pageCount = 0;
+      this.loadData()
+    },
+
+    // 获取明细 
+    secondLoadData() {
+      this.secondLoading = true
+      let params = Object.assign({},this.secondForm)
+      // let params = {
+      //   VehicleGrantCode: this.secondForm.VehicleGrantCode,
+      //   start_time: this.secondForm.start_time,
+      //   end_time: this.secondForm.end_time,
+      //   page_index: this.secondPageInfo.pageIndex,
+      //   page_size: this.secondPageInfo.pageSize,
+      // }
+      params.page_index = this.secondPageInfo.pageIndex
+      params.page_size = this.secondPageInfo.pageSize
+      this.$client.MileDetailSummayVehicleOilRecordSummary(params).then(res => {
+        this.secondLoading = false
+        if (res.head.result == "200") {
+            this.secondData = res.context.list
+            this.secondPageInfo.pageCount = res.context.total
+            this.secondSumTotal = {
+              7: res.context.summary['Count'],
+              8: res.context.summary['DispatchMile'],
+              9: res.context.summary['DispatchTotalCostTime'],
+              10: res.context.summary['AdditionMile'],
+              11: res.context.summary['AdditionTime'],
+              12: res.context.summary['TotalMile'],
+              13: res.context.summary['TotalCostTime'],
+            }
+            this.rowspanObj = this.$handleTableSpan(this.mergekeys, this.secondData,'Date',true)
+          } else {
+            this.$message({
+              showClose: true,
+              message: res.head.describle,
+              type: "error",
+            });
+          }
+      })
+    },
+    // 分页切换事件
+    secondHandleCurrentChange(val) {
+      this.secondPageInfo.pageIndex = val
+      this.secondLoadData()
+    },
+    // 切换每页条数
+    secondHandleSizeChange(val) {
+      this.secondPageInfo.pageSize = val
+      this.secondPageInfo.pageIndex = 1
+      this.secondPageInfo.pageCount = 0;
+      this.secondLoadData()
+    },
+
+    edit(index) {
+      this.type = 'edit'
+      this.rowIndex = index
+    },
+    // 单个保存
+    save(row) {
+      this.$client.UpdateMileDetailVehicleOilRecordSummary({context: [row]}).then(res => {
+        if (res.head.result == "200") {
+          this.type = "detail"
+          this.rowIndex = null
+          this.secondLoadData()
+        } else {
+          this.$message({
+            showClose: true,
+            message: res.head.describle,
+            type: "error",
+          });
+        }
+      })
+    },
+    editAll() {
+      if (this.secondData.length > 0) {
+        this.isEditAll = true
+        this.$refs.head.isEdit = false
+      }
+    },
+    // 批量保存
+    saveAll() {
+      this.$client.UpdateMileDetailVehicleOilRecordSummary({context: this.secondData}).then(res => {
+        if (res.head.result == "200") {
+          this.isEditAll = false
+          this.$refs.head.isEdit = true
+          this.secondLoadData()
+        } else {
+          this.$message({
+            showClose: true,
+            message: res.head.describle,
+            type: "error",
+          });
+        }
+      })
+    },
+    // 计算表格高度
+    setHead() {
+      setTimeout(() => {
+        let maxh = this.$el.offsetHeight;
+        let th = this.$refs.head.$el.offsetHeight;
+        let paginationH = this.$refs.paginationH.$el.offsetHeight;
+        this.TableHeight = maxh - th - paginationH - 30;
+        this.treeBoxHeight = maxh - 125
+      }, 60);
+    },
+  }
+}
+</script>
+
+<style lang="stylus" rel="stylesheet/stylus" scoped>
+.vehicle-mileage-statistics {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  .box-card {
+    height: 100%;
+    overflow: auto;
+  }
+  .left-box {
+    // flex: 0 0 23vw;
+    margin: 0 5px 0 0;
+    width: 210px;
+    height: 100%;
+  }
+
+  .center-box {
+    flex: 1;
+    height: 100%;
+  }
+}
+.vehicle-mileage-statistics /deep/ .el-card__header {
+  background-color: #F5F5F5;
+  padding: 12px 20px;
+}
+
+.vehicle-mileage-statistics /deep/ .el-card__body {
+  padding: 5px 10px;
+}
+</style>

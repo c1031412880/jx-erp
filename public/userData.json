@@ -1,0 +1,31 @@
+{
+  "code": 200,
+  "msg": "获取成功",
+  "data": [
+    {
+      "userId": 2000036,
+      "userName": "测试001",
+      "deptId": 1
+    },
+    {
+      "userId": 2000032,
+      "userName": "杨眉",
+      "deptId": 1
+    },
+    {
+      "userId": 2000031,
+      "userName": "张玮",
+      "deptId": 1
+    },
+    {
+      "userId": 2000038,
+      "userName": "秀",
+      "deptId": 1
+    },
+    {
+      "userId": 2000040,
+      "userName": "大时代",
+      "deptId": 1
+    }
+  ]
+}

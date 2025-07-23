@@ -1,0 +1,107 @@
+<template>
+  <div class="sub-req">
+    <el-form :inline="true" size="mini" :model="form" ref="form">
+      <el-row>
+        <el-form-item label="关键字搜索">
+            <!-- <el-select v-model="form.type" placeholder="请选择" style="width:70%">
+              <el-option
+                v-for="item in options"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value">
+              </el-option>
+            </el-select> -->
+            <el-input v-model="form.content" clearable></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search" @click="onSubmit" :disabled="isSort">查询</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button @click="resetForm()" icon="el-icon-refresh-right" :disabled="isSort">重置</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="onBtn('add')" icon="el-icon-plus" v-if="$isPowerShow('add')" :disabled="isSort">添加</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-popconfirm
+            @confirm="onBtn('delete')"
+            title="确定删除选中的检查内容吗？"
+            v-if="$isPowerShow('del')">
+            <el-button slot="reference" type="primary" icon="el-icon-delete" size="mini" :disabled="isSort">删除</el-button>
+          </el-popconfirm>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="onBtn('save')" icon="el-icon-check" v-if="$isPowerShow('save')" :disabled="isSort">保存</el-button>
+        </el-form-item>
+        <el-form-item  v-if="isShowSortButton">
+          <el-button type="primary" @click="adjustSortSet">{{!isSort? '调整排序':'保存排序'}} </el-button>
+          <el-button @click="onSubmit" v-if="isSort">取消</el-button>
+        </el-form-item>
+      </el-row>
+    </el-form>
+  </div>
+</template>
+
+<script type="text/ecmascript-6">
+export default {
+  props:{
+    isSort:{
+      type: Boolean,
+      default: false,
+    },
+    isShowSortButton:{
+      type: Boolean,
+      default: true,
+    },
+  },
+  data() {
+    return {
+      form: {
+        // type: 1,
+        content:'',
+        vehicle_ids: []
+      },
+      options: [
+        {
+          value: 1,
+          label: '检查项目名称'
+        }, 
+        {
+          value: 2,
+          label: '项目内容'
+        }, 
+        {
+          value: 3,
+          label: '技术要求'
+        }
+      ],
+    };
+  },
+  mounted() {
+  },
+  methods: {
+    // 查询
+    onSubmit() {
+      let info = {...this.form};
+      this.$emit("on-ok", info);
+    },
+    // 添加编辑
+    onBtn(com) {
+      this.$emit("on-add", com);
+    },
+    resetForm() {
+      this.form.content = ''
+      // this.form.type = 1
+      this.$refs.vehicleTree.onClear()
+      this.onSubmit()
+    },
+    // 调整排序
+    adjustSortSet() {
+      this.$emit("adjust-sort-set", this.isSort)
+    },
+  },
+};
+</script>
+
+<style lang="stylus" rel="stylesheet/stylus" scoped>
+</style>

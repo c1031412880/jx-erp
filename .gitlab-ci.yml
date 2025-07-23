@@ -1,0 +1,43 @@
+stages:
+  - pack
+  - deploy
+
+variables:
+
+  #演示环境账户
+  DEPLOY_ACCOUNT: gis
+  #测试环境IP
+  DEPLOY_SERVER: 192.168.3.190
+  #镜像仓库地址
+  REPOSITORY: 122.225.198.118:11028/erp-web
+  #默认镜像版本
+  DEPLOY_VERSION: latest
+  #镜像名称
+  IMAGE_NAME: 'erp-web'
+
+pack:
+  stage: pack
+  tags:
+    - web-build
+  script:
+    - pwd
+    - ls
+    - test -z $CI_COMMIT_TAG && echo $DEPLOY_VERSION || DEPLOY_VERSION=$CI_COMMIT_TAG
+    - echo "生成镜像......"
+    - docker build -o Dockerfile -t $REPOSITORY/$IMAGE_NAME:$DEPLOY_VERSION .
+    - echo "推送镜像......"
+    - docker push $REPOSITORY/$IMAGE_NAME:$DEPLOY_VERSION
+    - echo "删除镜像......"
+    - docker rmi $REPOSITORY/$IMAGE_NAME:$DEPLOY_VERSION
+  only:
+    - dev
+
+deploy:
+  stage: deploy
+  tags:
+    - all
+  script:
+    - pwd
+    - ssh root@122.225.198.118 -p 11022 "cd /home/gis/project/erp-web/ && docker-compose up -d "
+  only:
+    - dev

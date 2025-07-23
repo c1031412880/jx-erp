@@ -1,0 +1,84 @@
+<template>
+  <el-form :inline="true" size="mini">
+    <el-form-item>
+      <el-date-picker
+        v-model="date"
+        type="daterange"
+        range-separator="至"
+        start-placeholder="开始日期"
+        format="yyyy-MM-dd"
+        value-format="yyyy-MM-dd"
+        end-placeholder="结束日期"
+        @change="selectedTime">
+      </el-date-picker>
+    </el-form-item>
+    <el-form-item>
+      <el-button type="primary" icon="el-icon-search" @click="onSubmit">查询</el-button>
+    </el-form-item>
+    <el-form-item>
+      <el-button  @click="Reset" icon="el-icon-refresh-left">重置</el-button>
+    </el-form-item>
+    <el-form-item>
+      <el-button  @click="dow" icon="el-icon-refresh-left">导出</el-button>
+    </el-form-item>
+  </el-form>
+</template>
+
+<script type="text/ecmascript-6">
+import {getDate} from '@/utils/index'
+export default {
+  name: "sub-req",
+  components: {},
+  data() {
+    //这里存放数据",
+    return {
+      date: [],
+      form: {
+        date: [],
+      }
+    }
+  },
+  mounted() {
+    this.onSetTime()
+    this.onSubmit()
+  },
+  //方法集合",
+  methods: {
+    onSetTime(type = 'lastOneMonth') {
+      let timeObj = getDate(type)
+      this.date = this.$addTime([timeObj.startTime, timeObj.endTime])
+      this.form.date = this.date
+    },
+    selectedTime() {
+      if(this.date && this.date.length>0) {
+        this.date = this.$addTime(this.date)
+        this.form.date = this.date
+      }else{
+        this.form.date = []
+      }
+    },
+    onSubmit() {
+      let info = {};
+      for (let i in this.form) {
+        if (this.form[i]) {
+          info[i] = this.form[i];
+        }
+      }
+      this.$emit("on-ok", info);
+    },
+    dow() {
+      this.$emit('on-dow')
+    },
+    // 重置
+    Reset(){
+      Object.assign(this.$data,this.$options.data())
+      this.onSetTime()
+      this.onSubmit()
+    },
+  },
+}
+</script>
+
+<style lang="scss" scoped>
+
+</style>

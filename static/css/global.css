@@ -1,0 +1,176 @@
+html,body {
+  width: 100%;
+  height: 100%;
+}
+/* html {
+  zoom: 0.9;
+} */
+
+[v-cloak] {
+  display: none!important;
+}
+
+.show-flex-box-r {
+ display: flex;
+ flex-direction: row;
+}
+
+.show-flex-box-c {
+ display: flex;
+ flex-direction: column;
+}
+
+.show-flex-center {
+ justify-content: center;
+ align-items: center;
+}
+
+.show-flex-grow-1 {
+ flex-grow: 1;
+}
+
+.hide-line1 {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 消息通知 */
+.el-notification {
+  top: 85px !important;
+}
+
+.hide-line2 {
+  overflow: hidden;
+  display: -webkit-box;
+  /* autoprefixer: ignore next */
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.hide-line3 {
+  overflow: hidden;
+  display: -webkit-box;
+  /* autoprefixer: ignore next */
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.hide-line4 {
+  overflow: hidden;
+  display: -webkit-box;
+  /* autoprefixer: ignore next */
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+::-webkit-input-placeholder{/*Webkit browsers*/
+  color:#999;
+  font-size:12px;
+}
+:-moz-placeholder{/*Mozilla Firefox 4 to 8*/
+  color:#999;
+  font-size:12px;
+}
+::moz-placeholder{/*Mozilla Firefox 19+*/
+  color:#999;
+  font-size:12px;
+}
+:-ms-input-placeholder{/*Internet Explorer 10+*/
+    color:#999;
+    font-size:12px;
+}
+
+
+.el-loading-spinner .path {
+  stroke: rgba(255, 120, 0, 0.6);
+}
+
+.el-loading-spinner .el-loading-text{
+  /* color: rgba(255, 120, 0, 0.5); */
+  color: rgba(255,255,255,0.5);
+  margin: 10px 0;
+  font-size: 20px;
+}
+
+/* 隐藏滚动条 start */
+
+/*webkit内核*/
+.scroll-content::-webkit-scrollbar {
+  width:0px;
+  height:0px;
+  display: none;
+}
+
+.scroll-content::-webkit-scrollbar-button {
+  background-color:rgba(0,0,0,0);
+}
+
+.scroll-content::-webkit-scrollbar-track {
+  background-color:rgba(0,0,0,0);
+}
+
+.scroll-content::-webkit-scrollbar-track-piece {
+  background-color:rgba(0,0,0,0);
+}
+
+.scroll-content::-webkit-scrollbar-thumb{
+  background-color:rgba(0,0,0,0);
+}
+
+.scroll-content::-webkit-scrollbar-corner {
+  background-color:rgba(0,0,0,0);
+}
+
+.scroll-content::-webkit-scrollbar-resizer {
+  background-color:rgba(0,0,0,0);
+}
+
+.scroll-content::-webkit-scrollbar {
+  width:10px;
+  height:10px;
+}
+/*o内核*/
+.scroll-content .-o-scrollbar {
+  -moz-appearance: none !important;   
+  background: rgba(0,255,0,0) !important;  
+}
+
+.scroll-content::-o-scrollbar-button {
+  background-color:rgba(0,0,0,0);
+}
+
+.scroll-content::-o-scrollbar-track {
+  background-color:rgba(0,0,0,0);
+}
+
+.scroll-content::-o-scrollbar-track-piece {
+  background-color:rgba(0,0,0,0);
+}
+
+.scroll-content::-o-scrollbar-thumb{
+  background-color:rgba(0,0,0,0);
+}
+
+.scroll-content::-o-scrollbar-corner {
+  background-color:rgba(0,0,0,0);
+}
+
+.scroll-content::-o-scrollbar-resizer  {
+  background-color:rgba(0,0,0,0);
+}
+
+/*IE10,IE11,IE12*/
+.scroll-content {
+  -ms-scroll-chaining: chained;
+  -ms-overflow-style: none;
+  -ms-content-zooming: zoom;
+  -ms-scroll-rails: none;
+  -ms-content-zoom-limit-min: 100%;
+  -ms-content-zoom-limit-max: 500%;
+  -ms-scroll-snap-type: proximity;
+  -ms-scroll-snap-points-x: snapList(100%, 200%, 300%, 400%, 500%);
+  -ms-overflow-style: none;
+  overflow: auto;
+}
+/* 隐藏滚动条 end */
